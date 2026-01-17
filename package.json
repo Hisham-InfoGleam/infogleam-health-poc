@@ -1,0 +1,30 @@
+{
+  "name": "infogleam-health-poc",
+  "version": "1.0.0",
+  "description": "HL7 to FHIR integration demo using Mirth Connect and Node.js",
+  "main": "test-hl7-sender.js",
+  "scripts": {
+    "start": "docker compose up -d",
+    "stop": "docker compose down",
+    "logs:fhir": "docker logs -f fhir-logic-service",
+    "logs:mirth": "docker logs -f mirth-poc",
+    "test:send-hl7": "node test-hl7-sender.js",
+    "test:send-lab": "node test-hl7-sender.js samples/sample_lab_result.hl7",
+    "rebuild": "docker compose down && docker compose build --no-cache && docker compose up -d"
+  },
+  "keywords": [
+    "hl7",
+    "fhir",
+    "mirth",
+    "healthcare",
+    "interoperability"
+  ],
+  "author": "Hisham Alrashdan <hisham@infogleam.com>",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {}
+}

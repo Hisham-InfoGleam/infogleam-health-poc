@@ -1,0 +1,19 @@
+{
+  "name": "infogleam-fhir-service",
+  "version": "1.0.0",
+  "description": "FHIR transformation service for HL7 messages from Mirth Connect",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": ["fhir", "hl7", "mirth", "healthcare", "interoperability"],
+  "author": "InfoGleam Health Systems",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

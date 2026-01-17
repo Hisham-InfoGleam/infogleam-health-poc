@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # Mirth Connect Instance (using Apache Derby by default)
+  mirth:
+    image: nextgenhealthcare/connect:latest
+    container_name: mirth-poc
+    ports:
+      - "18082:8080"  # Web Dashboard
+      - "18444:8443"  # Administrator Login
+      - "19002:9001"  # HL7 Listener Port
+    networks:
+      - infogleam-network
+    restart: always
+
+  # InfoGleam FHIR Transformation Service
+  fhir-app:
+    build: ./fhir-app
+    container_name: fhir-logic-service
+    ports:
+      - "3000:3000"
+    networks:
+      - infogleam-network
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    depends_on:
+      - mirth
+    restart: always
+
+networks:
+  infogleam-network:
+    driver: bridge

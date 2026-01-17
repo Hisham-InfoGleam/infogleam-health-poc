@@ -1,0 +1,45 @@
+# Ignore node_modules
+node_modules/
+
+# Ignore logs
+*.log
+npm-debug.log*
+
+# Ignore environment files
+.env
+.env.local
+.env.*
+
+# Ignore secrets / keys / certs
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+.npmrc
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore Docker volumes
+volumes/
+
+# Ignore local data folders (if created)
+data/
+mirth-data/
+
+# Ignore build artifacts
+dist/
+build/
