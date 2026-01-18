@@ -40,6 +40,11 @@ volumes/
 data/
 mirth-data/
 
+# Internal/private documentation (keep out of public repos)
+internal/
+private/
+notes/
+
 # Ignore build artifacts
 dist/
 build/

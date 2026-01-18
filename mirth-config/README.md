@@ -12,7 +12,9 @@ This folder contains configuration files and documentation for setting up Mirth 
 5. Login credentials:
    - Server: `https://localhost:18444`
    - Username: `admin`
-   - Password: `admin`
+   - Password: `admin` (default for this demo image)
+
+⚠️ For anything beyond local demos/training, change defaults and follow your organization's security policies.
 
 ### 2. Create HL7 to FHIR Channel
 
@@ -139,7 +141,7 @@ environment:
   - DATABASE=postgres
   - DATABASE_URL=jdbc:postgresql://postgres:5432/mirthdb
   - DATABASE_USERNAME=mirth
-  - DATABASE_PASSWORD=your_secure_password
+   - DATABASE_PASSWORD=your_secure_password  # never commit real passwords
 ```
 
 ### High Availability Setup
