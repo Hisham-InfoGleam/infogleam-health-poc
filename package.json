@@ -10,7 +10,11 @@
     "logs:mirth": "docker logs -f mirth-poc",
     "test:send-hl7": "node test-hl7-sender.js",
     "test:send-lab": "node test-hl7-sender.js samples/sample_lab_result.hl7",
-    "rebuild": "docker compose down && docker compose build --no-cache && docker compose up -d"
+    "rebuild": "docker compose down && docker compose build --no-cache && docker compose up -d",
+    "docs:install": "npm --prefix docs-site install",
+    "docs:dev": "npm --prefix docs-site start",
+    "docs:build": "npm --prefix docs-site run build",
+    "docs:serve": "npm --prefix docs-site run serve"
   },
   "keywords": [
     "hl7",

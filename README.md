@@ -25,6 +25,23 @@ This repo is designed to be safe to share as a demo:
 - Included HL7 samples are **synthetic** and **anonymized**.
 - Do **not** commit real HL7 messages, screenshots, logs, or exports that contain PHI.
 
+If you publish docs online (e.g., GitHub Pages), apply the same rule: **never publish PHI**, and avoid posting screenshots/logs/exports from real environments.
+
+---
+
+## 📚 Online Documentation (Optional)
+
+This repo includes a publishable documentation site in `docs-site/`.
+
+Recommended Node versions for docs: **18 LTS** or **20 LTS**.
+
+```powershell
+npm run docs:install
+npm run docs:dev
+```
+
+If you want this online, enable GitHub Pages (Actions deployment) and push to `main`.
+
 ## ⚠️ Disclaimer (POC / Education Only)
 
 This project is a proof-of-concept for learning and demos only.

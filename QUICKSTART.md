@@ -67,4 +67,17 @@ A: Ensure Mirth channel uses `http://fhir-logic-service:3000` not `localhost`
 
 ---
 
+## Online Documentation (Optional)
+
+This repo includes a Docusaurus documentation site in `docs-site/`.
+
+```powershell
+npm run docs:install
+npm run docs:dev
+```
+
+If you publish the docs (e.g., GitHub Pages), keep all content **synthetic/anonymized** and do not publish PHI, screenshots, or logs from real systems.
+
+---
+
 Full documentation: [README.md](README.md)
