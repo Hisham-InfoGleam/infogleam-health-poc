@@ -4,7 +4,7 @@ services:
   # Mirth Connect Instance (using Apache Derby by default)
   mirth:
     image: nextgenhealthcare/connect:latest
-    container_name: mirth-poc
+    container_name: mirth-connect
     ports:
       - "18082:8080"  # Web Dashboard
       - "18444:8443"  # Administrator Login

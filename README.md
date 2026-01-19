@@ -1,51 +1,38 @@
-# 🏥 InfoGleam Health PoC - HL7 to FHIR Integration
+# 🏥 InfoGleam Health - HL7 to FHIR Reference Implementation
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 [![Mirth Connect](https://img.shields.io/badge/Mirth-Connect-green.svg)](https://www.nextgen.com/products-and-services/integration-engine)
 [![FHIR R4](https://img.shields.io/badge/FHIR-R4-orange.svg)](https://www.hl7.org/fhir/)
 [![Node.js](https://img.shields.io/badge/Node.js-18-brightgreen.svg)](https://nodejs.org/)
 
-A **professional-grade demonstration** of healthcare interoperability showing real-time transformation of HL7 v2.5 messages into FHIR R4 resources using **Mirth Connect** as the integration engine.
+An open, community-friendly reference implementation that shows how to transform HL7 v2.5 messages into FHIR R4 resources using **Mirth Connect** as the integration engine.
 
 ---
 
-## 🎯 What This Demo Shows
+## 🎯 What This Project Provides
 
-This proof-of-concept demonstrates:
+This project provides:
 
 ✅ **HL7 Message Ingestion** - Receive ADT (Admission, Discharge, Transfer) messages via LLP protocol  
 ✅ **Enterprise Integration** - Use Mirth Connect as a healthcare message broker  
 ✅ **FHIR Transformation** - Convert legacy HL7 to modern FHIR R4 Patient resources  
 ✅ **Microservices Architecture** - Containerized services with Docker  
-✅ **Production-Ready Patterns** - Health checks, proper networking, logging  
+✅ **Operational Patterns** - Health checks, proper networking, logging  
 
 ## 🔒 Privacy / PHI
 
-This repo is designed to be safe to share as a demo:
+This repo is designed to be safe to share publicly:
 - Included HL7 samples are **synthetic** and **anonymized**.
 - Do **not** commit real HL7 messages, screenshots, logs, or exports that contain PHI.
 
-If you publish docs online (e.g., GitHub Pages), apply the same rule: **never publish PHI**, and avoid posting screenshots/logs/exports from real environments.
+Important: if the GitHub repo is public, then **all files in the repository are public** (not just documentation). Do not push internal runbooks, customer details, or anything containing PHI/PII.
 
 ---
 
-## 📚 Online Documentation (Optional)
+## ⚠️ Disclaimer (Educational / No Warranty)
 
-This repo includes a publishable documentation site in `docs-site/`.
-
-Recommended Node versions for docs: **18 LTS** or **20 LTS**.
-
-```powershell
-npm run docs:install
-npm run docs:dev
-```
-
-If you want this online, enable GitHub Pages (Actions deployment) and push to `main`.
-
-## ⚠️ Disclaimer (POC / Education Only)
-
-This project is a proof-of-concept for learning and demos only.
-- Not intended for production use.
+This project is for learning and reference.
+- Not intended for production use without proper engineering, testing, and security review.
 - No warranty is provided.
 - Licensed under the MIT License (see LICENSE).
 
@@ -92,7 +79,7 @@ infogleam-health-poc/
 ├── mirth-config/               # Mirth Connect configuration
 │   ├── README.md               # Detailed channel setup guide
 │   └── adt_to_fhir_channel.xml # Pre-configured channel template
-├── samples/                    # Test data for demonstrations
+├── samples/                    # Synthetic HL7 samples for testing
 │   ├── sample_adt.hl7          # Patient admission message
 │   ├── sample_lab_result.hl7   # Laboratory results message
 │   └── README.md               # Sample data documentation
@@ -127,7 +114,7 @@ docker ps
 ```
 
 You should see:
-- ✅ `mirth-poc` (status: healthy)
+- ✅ `mirth-connect` (status: healthy)
 - ✅ `fhir-logic-service` (status: up)
 
 ### Step 3: Configure Mirth Channel
@@ -216,26 +203,13 @@ docker logs fhir-logic-service | Select-String "FHIR"
 
 ---
 
-## 📊 Demo Checklist (For Video/Presentation)
-
-- [ ] **Architecture Slide** - Show the 3-tier integration flow
-- [ ] **Start Services** - `docker-compose up -d` with terminal visible
-- [ ] **Show Mirth UI** - Navigate to channel configuration
-- [ ] **Code Walkthrough** - Highlight transformer JavaScript in Mirth
-- [ ] **Send Message** - Use Mirth's "Send Message" feature
-- [ ] **Live Logs** - Split screen showing FHIR service console output
-- [ ] **Show FHIR JSON** - Point out FHIR R4 compliance (resourceType, meta, etc.)
-- [ ] **Explain Value** - "This is how hospitals modernize legacy systems"
-
----
-
 ## 🔧 Troubleshooting
 
 ### Container Won't Start
 
 ```powershell
 # Check logs
-docker logs mirth-poc
+docker logs mirth-connect
 docker logs fhir-logic-service
 
 # Restart services
@@ -282,14 +256,14 @@ taskkill /PID <PID> /F
 
 ## 🚢 Production Considerations
 
-### What This Demo **Does NOT** Include:
+### What This Reference **Does NOT** Include:
 - ❌ Authentication/Authorization (OAuth2, SMART on FHIR)
 - ❌ External database (PostgreSQL/MySQL)
 - ❌ Message persistence/retry logic
 - ❌ Horizontal scaling/load balancing
 - ❌ Monitoring/alerting (Prometheus/Grafana)
 
-### Roadmap for Production:
+### Ideas for Production Hardening:
 1. **Security:** Implement mTLS, API keys, RBAC
 2. **Database:** Migrate from Derby to PostgreSQL cluster
 3. **Observability:** Add ELK stack or Datadog integration

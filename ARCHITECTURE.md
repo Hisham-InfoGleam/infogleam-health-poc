@@ -1,10 +1,10 @@
-# Architecture Diagram - InfoGleam Health PoC
+# Architecture Diagram - InfoGleam Health HL7 → FHIR
 
 ## System Architecture
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────┐
-│                         INFOGLEAM HEALTH POC                              │
+│                      INFOGLEAM HEALTH HL7 → FHIR                           │
 │                  HL7 v2.5 → Mirth Connect → FHIR R4                       │
 └───────────────────────────────────────────────────────────────────────────┘
 
@@ -39,7 +39,7 @@
 │  │              Docker Network: infogleam-network                    │ │
 │  │                                                                   │ │
 │  │  ┌─────────────────────────┐  ┌──────────────────────────────┐  │ │
-│  │  │   Container: mirth-poc  │  │ Container: fhir-logic-service│  │ │
+│  │  │ Container: mirth-connect│  │ Container: fhir-logic-service│  │ │
 │  │  │  ┌──────────────────┐   │  │  ┌────────────────────────┐  │  │ │
 │  │  │  │ Mirth Connect    │   │  │  │  Node.js Express      │  │  │ │
 │  │  │  │ (Java)           │   │  │  │  FHIR Transformer     │  │  │ │
@@ -72,8 +72,8 @@
 
 INPUT (HL7 v2.5 ADT^A01):
 ─────────────────────────
-MSH|^~\&|HOSPITAL_SYSTEM|INFOGLEAM_DEMO|...
-PID|1||DEMO000001^^^INFOGLEAM^MR||PATIENT^TEST^A||19700101|U|||...
+MSH|^~\&|HOSPITAL_SYSTEM|INFOGLEAM_REF|...
+PID|1||TEST000001^^^INFOGLEAM^MR||PATIENT^TEST^A||19700101|U|||...
 PV1|1|I|4W^401^01^INFOGLEAM|||9999^PROVIDER^TEST^^^DR|||...
 
          │
@@ -87,7 +87,7 @@ PV1|1|I|4W^401^01^INFOGLEAM|||9999^PROVIDER^TEST^^^DR|||...
 INTERMEDIATE (JSON):
 ────────────────────
 {
-   "patientId": "DEMO000001",
+   "patientId": "TEST000001",
    "firstName": "TEST",
    "lastName": "PATIENT",
    "gender": "U",
@@ -114,8 +114,8 @@ OUTPUT (FHIR R4 Patient):
     "source": "InfoGleam-Mirth-Integration"
   },
   "identifier": [{
-    "system": "http://hospital.infogleam.com/patients",
-      "value": "DEMO000001"
+      "system": "https://example.org/fhir/patients",
+         "value": "TEST000001"
   }],
   "name": [{
     "use": "official",
@@ -289,13 +289,13 @@ Development (Current):              Production (Future):
 │                      PROJECT METADATA                                   │
 └─────────────────────────────────────────────────────────────────────────┘
 
-Project Name:    InfoGleam Health PoC
+Project Name:    InfoGleam Health HL7 → FHIR Reference
 Version:         1.0.0
 Created:         January 12, 2026
-Status:          Production Ready ✅
+Status:          Reference Implementation (Not Production)
 License:         MIT
 
-Purpose:         Demonstrate HL7 to FHIR transformation
+Purpose:         Reference HL7 to FHIR transformation patterns
                 using Mirth Connect integration engine
 
 Target Audience: Healthcare IT professionals, System integrators,
@@ -304,10 +304,10 @@ Target Audience: Healthcare IT professionals, System integrators,
 Use Cases:       • Legacy system modernization
                 • EHR interoperability
                 • Cloud migration
-                • Standards compliance demos
+                • Standards compliance
 
 Repository:      [Add your GitHub URL here]
-Documentation:   README.md, QUICKSTART.md, DEMO_PLAYBOOK.md
+Documentation:   README.md, QUICKSTART.md
 Support:         [Add your contact email here]
 
 Built with ❤️ for the healthcare IT community

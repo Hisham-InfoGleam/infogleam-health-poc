@@ -45,11 +45,20 @@ internal/
 private/
 notes/
 
+# Presentation assets (personal/internal)
+presentations/
+slides/
+*.ppt
+*.pptx
+*.key
+*.odp
+
 # Ignore build artifacts
 dist/
 build/
 
 # Docusaurus docs site
+docs-site/
 docs-site/node_modules/
 docs-site/.docusaurus/
 docs-site/.cache/

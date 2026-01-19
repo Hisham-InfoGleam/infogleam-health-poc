@@ -55,29 +55,6 @@ A: Wait 60-90 seconds after `npm start` for full initialization
 **Q: Connection refused error?**  
 A: Ensure Mirth channel uses `http://fhir-logic-service:3000` not `localhost`
 
-## Demo Flow for Video
-
-1. Show architecture diagram from README.md
-2. Run `npm start` with terminal visible
-3. Open Mirth UI and show channel configuration
-4. Split screen: Mirth on left, terminal with `npm run logs:fhir` on right
-5. Run `npm run test:send-hl7`
-6. Highlight FHIR JSON output in terminal
-7. Explain real-world value: "This is how hospitals bridge legacy and modern systems"
-
----
-
-## Online Documentation (Optional)
-
-This repo includes a Docusaurus documentation site in `docs-site/`.
-
-```powershell
-npm run docs:install
-npm run docs:dev
-```
-
-If you publish the docs (e.g., GitHub Pages), keep all content **synthetic/anonymized** and do not publish PHI, screenshots, or logs from real systems.
-
 ---
 
 Full documentation: [README.md](README.md)

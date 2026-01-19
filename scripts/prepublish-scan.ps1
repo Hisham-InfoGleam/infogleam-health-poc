@@ -12,16 +12,15 @@ $excludePathRegex = '(\\|/)(node_modules|\.git|volumes|dist|build)(\\|/)'
 $selfPath = (Resolve-Path $PSCommandPath).Path
 
 $demoAllowlistMarkers = @(
-  'DEMO000001',
+  'TEST000001',
   'PATIENT^TEST',
   '(555)0100',
-  '100 DEMO STREET',
+  '100 TEST STREET',
   'TESTVILLE'
 )
 
 # Allowlist emails that are expected to be public in this repo (e.g., author/contact placeholders).
 $emailAllowlist = @(
-  'hisham@infogleam.com',
   'your-email@example.com',
   'example.com'
 )

@@ -12,9 +12,9 @@ This folder contains configuration files and documentation for setting up Mirth 
 5. Login credentials:
    - Server: `https://localhost:18444`
    - Username: `admin`
-   - Password: `admin` (default for this demo image)
+   - Password: `admin` (default for the local development image)
 
-⚠️ For anything beyond local demos/training, change defaults and follow your organization's security policies.
+⚠️ For anything beyond local development/training, change defaults and follow your organization's security policies.
 
 ### 2. Create HL7 to FHIR Channel
 
@@ -127,7 +127,7 @@ return (messageType == 'ADT' && triggerEvent == 'A01');
 ### Issue: Mirth Won't Start
 **Solution:** 
 - Check if port 18082 or 18444 is already in use
-- Review Docker logs: `docker logs mirth-poc`
+- Review Docker logs: `docker logs mirth-connect`
 - Wait longer (first start can take 60+ seconds)
 
 ## Advanced Configuration

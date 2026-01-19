@@ -1,10 +1,12 @@
 # Sample HL7 Messages for Testing
 
-This folder contains sample HL7 messages for testing the InfoGleam Health PoC integration.
+This folder contains sample HL7 messages for testing the InfoGleam Health reference integration.
+
+These samples are provided for community learning/testing of HL7 parsing and transformation patterns.
 
 ## Privacy / PHI
 
-All sample messages in this folder contain **synthetic, anonymized demo data** (not real patients, not real providers). Do **not** paste or commit real HL7 messages containing PHI into this repo.
+All sample messages in this folder contain **synthetic, anonymized data** (not real patients, not real providers). Do **not** paste or commit real HL7 messages containing PHI into this repo.
 
 ## Files
 
@@ -14,10 +16,10 @@ All sample messages in this folder contain **synthetic, anonymized demo data** (
 
 **Patient Details:**
 - Name: Test A Patient
-- MRN: DEMO000001
+- MRN: TEST000001
 - DOB: January 1, 1970
 - Gender: Unknown (U)
-- Address: 100 Demo Street, Testville, USA
+- Address: 100 Test Street, Testville, USA
 - Phone: (555)0100
 
 ### 2. sample_lab_result.hl7
