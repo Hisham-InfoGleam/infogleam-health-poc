@@ -114,7 +114,7 @@ docker ps
 ```
 
 You should see:
-- ✅ `mirth-connect` (status: healthy)
+- ✅ `mirth-connect` (status: up)
 - ✅ `fhir-logic-service` (status: up)
 
 ### Step 3: Configure Mirth Channel
