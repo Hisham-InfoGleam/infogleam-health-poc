@@ -25,7 +25,6 @@ This repo is designed to be safe to share publicly:
 - Included HL7 samples are **synthetic** and **anonymized**.
 - Do **not** commit real HL7 messages, screenshots, logs, or exports that contain PHI.
 
-Important: if the GitHub repo is public, then **all files in the repository are public** (not just documentation). Do not push internal runbooks, customer details, or anything containing PHI/PII.
 
 ---
 
