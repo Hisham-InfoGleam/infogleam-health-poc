@@ -282,7 +282,8 @@ MIT License - Free for educational and commercial use.
 **InfoGleam Health Systems**  
 *Healthcare Interoperability Specialists*
 
-For questions or consulting inquiries, contact: [Add your email here]
+Hisham Hussein Alrashdan
+For questions or consulting inquiries, contact: hisham@infogleam.com
 
 ---
 
