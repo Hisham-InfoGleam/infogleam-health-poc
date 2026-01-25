@@ -274,7 +274,9 @@ taskkill /PID <PID> /F
 ## 📝 License
 
 MIT License - Free for educational and commercial use.
+This project is provided as an **educational resource** for the healthcare developer community.
 
+Use it freely to learn, build, and improve healthcare interoperability.
 ---
 
 ## 👨‍💻 Author
@@ -294,4 +296,4 @@ For questions or consulting inquiries, contact: hisham@infogleam.com
 
 ---
 
-**Made with ❤️ for the healthcare IT community**
+**Built with love for the healthcare community by [InfoGleam](https://infogleam.com)**
