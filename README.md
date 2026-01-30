@@ -6,7 +6,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18-brightgreen.svg)](https://nodejs.org/)
 
 An open, community-friendly reference implementation that shows how to transform HL7 v2.5 messages into FHIR R4 resources using **Mirth Connect** as the integration engine.
-
+An open, community-friendly reference implementation that shows how to transform HL7 v2.5 messages into FHIR R4 resources using **Mirth Connect** as the integration engine.
 ---
 
 ## 🎯 What This Project Provides
