@@ -282,10 +282,14 @@ Use it freely to learn, build, and improve healthcare interoperability.
 
 **InfoGleam Health Systems**  
 *Healthcare Interoperability Specialists*
-*Hisham Alrashdan*
-For questions or consulting inquiries, contact: hisham@infogleam.com
+
+**Hisham Hussein Alrashdan**  
+For questions or consulting inquiries: hisham@infogleam.com
+
+[www.infogleam.com](https://infogleam.com)
 
 ---
+
 
 ## 🌟 Credits
 
