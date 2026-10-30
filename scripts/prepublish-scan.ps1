@@ -19,9 +19,10 @@ $demoAllowlistMarkers = @(
   'TESTVILLE'
 )
 
-# Allowlist emails that are expected to be public in this repo (e.g., author/contact placeholders).
+# Allowlist emails that are expected to be public in this repo (the author's contact address
+# and example.com addresses in the synthetic samples).
 $emailAllowlist = @(
-  'your-email@example.com',
+  'hisham@infogleam.com',
   'example.com'
 )
 

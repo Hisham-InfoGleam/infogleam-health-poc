@@ -9,6 +9,7 @@ npm-debug.log*
 .env
 .env.local
 .env.*
+!.env.example
 
 # Ignore secrets / keys / certs
 *.pem
