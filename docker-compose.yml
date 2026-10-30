@@ -1,33 +1,33 @@
-version: '3.8'
+# Local demo only. Use synthetic test data, never real patient data.
+# All ports are bound to 127.0.0.1, so they are not reachable from other machines.
+# The engine starts with the default login admin / admin; change it at the first login.
+
+name: infogleam-health-poc
 
 services:
-  # Mirth Connect Instance (using Apache Derby by default)
-  mirth:
-    image: nextgenhealthcare/connect:latest
-    container_name: mirth-connect
+  # Open Integration Engine (OIE), the open-source continuation of Mirth Connect.
+  oie:
+    image: openintegrationengine/engine:4.5.2-ubuntu-jre
+    container_name: oie-engine
     ports:
-      - "18082:8080"  # Web Dashboard
-      - "18444:8443"  # Administrator Login
-      - "19002:9001"  # HL7 Listener Port
+      - "127.0.0.1:18444:8443"  # Administrator and REST API (HTTPS, self-signed certificate)
+      - "127.0.0.1:6661:6661"   # MLLP listener of the ADT_to_FHIR_Patient channel
+    volumes:
+      - oie-appdata:/opt/engine/appdata   # database, keystore and channels
     networks:
-      - infogleam-network
-    restart: always
+      - poc-net
 
-  # InfoGleam FHIR Transformation Service
+  # Node.js app that turns the channel JSON into a FHIR R4 Patient.
   fhir-app:
     build: ./fhir-app
-    container_name: fhir-logic-service
+    container_name: fhir-logic-service   # the channel's HTTP Sender uses this name
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     networks:
-      - infogleam-network
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-    depends_on:
-      - mirth
-    restart: always
+      - poc-net
+
+volumes:
+  oie-appdata:
 
 networks:
-  infogleam-network:
-    driver: bridge
+  poc-net:
