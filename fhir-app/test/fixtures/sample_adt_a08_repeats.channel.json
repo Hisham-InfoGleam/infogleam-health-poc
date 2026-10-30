@@ -1,0 +1,23 @@
+{
+  "messageControlId": "MSG00003",
+  "messageType": "ADT^A08",
+  "delimiters": "|^~\\&",
+  "identifiers": [
+    { "value": "PI000002", "authority": "INFOGLEAM", "authorityId": "", "authorityIdType": "", "type": "PI" },
+    { "value": "TEST000002", "authority": "INFOGLEAM", "authorityId": "", "authorityIdType": "", "type": "MR" }
+  ],
+  "names": [
+    { "family": "SAMPLE", "given": "JANE", "middle": "ANN MARIE", "suffix": "", "prefix": "MS", "type": "L" },
+    { "family": "TESTER", "given": "JANE", "middle": "", "suffix": "", "prefix": "", "type": "M" }
+  ],
+  "birthDate": "198503",
+  "gender": "F",
+  "addresses": [
+    { "street": "12 OAK \\T\\ ELM STREET", "other": "UNIT 5", "city": "TESTVILLE", "state": "TS", "postalCode": "00000", "country": "USA", "type": "H" },
+    { "street": "PO BOX 100", "other": "", "city": "TESTVILLE", "state": "TS", "postalCode": "00000", "country": "USA", "type": "M" }
+  ],
+  "phones": [
+    { "number": "", "use": "PRN", "equipment": "PH", "email": "", "countryCode": "", "areaCode": "555", "localNumber": "0101", "extension": "" },
+    { "number": "", "use": "NET", "equipment": "Internet", "email": "jane.sample@example.com", "countryCode": "", "areaCode": "", "localNumber": "", "extension": "" }
+  ]
+}

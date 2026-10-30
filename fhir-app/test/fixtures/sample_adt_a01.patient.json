@@ -1,0 +1,50 @@
+{
+  "resourceType": "Patient",
+  "identifier": [
+    {
+      "type": {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+            "code": "MR",
+            "display": "Medical record number"
+          }
+        ]
+      },
+      "system": "https://example.org/fhir/mrn",
+      "value": "TEST000001",
+      "assigner": {
+        "display": "INFOGLEAM"
+      }
+    }
+  ],
+  "name": [
+    {
+      "family": "PATIENT",
+      "given": [
+        "TEST",
+        "A"
+      ]
+    }
+  ],
+  "telecom": [
+    {
+      "system": "phone",
+      "value": "(555)0100",
+      "use": "home"
+    }
+  ],
+  "gender": "unknown",
+  "birthDate": "1970-01-01",
+  "address": [
+    {
+      "line": [
+        "100 TEST STREET"
+      ],
+      "city": "TESTVILLE",
+      "state": "TS",
+      "postalCode": "00000",
+      "country": "USA"
+    }
+  ]
+}

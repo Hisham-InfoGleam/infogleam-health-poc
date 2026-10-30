@@ -1,0 +1,77 @@
+{
+  "resourceType": "Patient",
+  "identifier": [
+    {
+      "type": {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+            "code": "MR",
+            "display": "Medical record number"
+          }
+        ]
+      },
+      "system": "https://example.org/fhir/mrn",
+      "value": "TEST000002",
+      "assigner": {
+        "display": "INFOGLEAM"
+      }
+    }
+  ],
+  "name": [
+    {
+      "use": "official",
+      "family": "SAMPLE",
+      "given": [
+        "JANE",
+        "ANN",
+        "MARIE"
+      ],
+      "prefix": [
+        "MS"
+      ]
+    },
+    {
+      "use": "maiden",
+      "family": "TESTER",
+      "given": [
+        "JANE"
+      ]
+    }
+  ],
+  "telecom": [
+    {
+      "system": "phone",
+      "value": "(555) 0101",
+      "use": "home"
+    },
+    {
+      "system": "email",
+      "value": "jane.sample@example.com"
+    }
+  ],
+  "gender": "female",
+  "birthDate": "1985-03",
+  "address": [
+    {
+      "use": "home",
+      "line": [
+        "12 OAK & ELM STREET",
+        "UNIT 5"
+      ],
+      "city": "TESTVILLE",
+      "state": "TS",
+      "postalCode": "00000",
+      "country": "USA"
+    },
+    {
+      "line": [
+        "PO BOX 100"
+      ],
+      "city": "TESTVILLE",
+      "state": "TS",
+      "postalCode": "00000",
+      "country": "USA"
+    }
+  ]
+}

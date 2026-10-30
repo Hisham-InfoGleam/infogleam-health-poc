@@ -1,0 +1,19 @@
+{
+  "messageControlId": "MSG00001",
+  "messageType": "ADT^A01",
+  "delimiters": "|^~\\&",
+  "identifiers": [
+    { "value": "TEST000001", "authority": "INFOGLEAM", "authorityId": "", "authorityIdType": "", "type": "MR" }
+  ],
+  "names": [
+    { "family": "PATIENT", "given": "TEST", "middle": "A", "suffix": "", "prefix": "", "type": "" }
+  ],
+  "birthDate": "19700101",
+  "gender": "U",
+  "addresses": [
+    { "street": "100 TEST STREET", "other": "", "city": "TESTVILLE", "state": "TS", "postalCode": "00000", "country": "USA", "type": "" }
+  ],
+  "phones": [
+    { "number": "(555)0100", "use": "", "equipment": "", "email": "", "countryCode": "", "areaCode": "", "localNumber": "", "extension": "" }
+  ]
+}
