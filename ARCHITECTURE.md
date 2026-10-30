@@ -1,313 +1,107 @@
-# Architecture Diagram - InfoGleam Health HL7 → FHIR
+# Architecture and design notes
 
-## System Architecture
+This file explains how the proof of concept is built and why. For setup and
+the mapping table, see the [README](README.md).
 
-```
-┌───────────────────────────────────────────────────────────────────────────┐
-│                      INFOGLEAM HEALTH HL7 → FHIR                           │
-│                  HL7 v2.5 → Mirth Connect → FHIR R4                       │
-└───────────────────────────────────────────────────────────────────────────┘
+## Components
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│                          DATA FLOW DIAGRAM                              │
-└─────────────────────────────────────────────────────────────────────────┘
+| Component | Technology | Port in the container | Port on the host (127.0.0.1) |
+|---|---|---|---|
+| Engine | Open Integration Engine 4.5.2 (`openintegrationengine/engine:4.5.2-ubuntu-jre`), built-in Derby database | 8443 (Administrator and REST API), 6661 (MLLP) | 18444, 6661 |
+| Channel | `ADT_to_FHIR_Patient` (`mirth-config/adt_to_fhir_channel.xml`) | runs inside the engine | |
+| FHIR app | Node.js 22, Express 4 (`fhir-app/`) | 3000 | 3000 |
+| Test sender | Node.js script, no dependencies (`test-hl7-sender.js`) | runs on the host | |
 
-   STEP 1              STEP 2              STEP 3              STEP 4
-   ──────              ──────              ──────              ──────
+The engine and the FHIR app share one Docker network. The channel reaches the
+app by its container name, `fhir-logic-service`.
 
-┌──────────┐      ┌──────────────┐    ┌──────────────┐    ┌───────────┐
-│ Hospital │      │    Mirth     │    │    Mirth     │    │   FHIR    │
-│   EMR    │─────>│   Listener   │───>│ Transformer  │───>│  Service  │
-│ (Source) │ HL7  │  Port 9001   │    │ (JavaScript) │HTTP│ (Node.js) │
-└──────────┘      └──────────────┘    └──────────────┘    └───────────┘
-     │                   │                    │                   │
-     │                   │                    │                   │
-     v                   v                    v                   v
-  Raw HL7          Parse Message        Extract Fields      Create FHIR
-  Message          MSH, PID, PV1       lastName, firstName   Patient JSON
-  (Pipe delim)     Segments            gender, DOB           Resource
+## Message flow
 
+1. The sender opens a TCP connection to port 6661 and sends one HL7 v2 message
+   in an MLLP frame (start byte `0x0B`, end bytes `0x1C 0x0D`).
+2. The engine parses the message into its XML form.
+3. The destination filter checks MSH-9. Only ADT A01, A04, A05, A08, A28 and
+   A31 pass. Other messages stop here with the status FILTERED.
+4. The destination transformer reads every repetition of PID-3, PID-5, PID-11
+   and PID-13, and PID-7 and PID-8, and writes them as JSON into the channel map
+   variable `fhirPayload`. It also adds MSH-10 (message control ID), MSH-9 and
+   the delimiters from MSH-1 and MSH-2.
+5. The HTTP Sender posts the JSON to `http://fhir-logic-service:3000/convert/patient`.
+6. The FHIR app maps the JSON to a FHIR R4 Patient and returns it with HTTP 200
+   and the content type `application/fhir+json`. A message it cannot use (for
+   example, no patient name) gets HTTP 400 with a FHIR OperationOutcome.
+7. The engine stores the response and builds the ACK from the destination
+   status: SENT gives AA, FILTERED gives AR, ERROR gives AE.
+8. The sender reads the ACK until the end of the MLLP frame and checks MSA-1.
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│                       DOCKER CONTAINER LAYOUT                           │
-└─────────────────────────────────────────────────────────────────────────┘
+## Design decisions
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      Host Machine (Windows)                             │
-│                                                                         │
-│  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │              Docker Network: infogleam-network                    │ │
-│  │                                                                   │ │
-│  │  ┌─────────────────────────┐  ┌──────────────────────────────┐  │ │
-│  │  │ Container: mirth-connect│  │ Container: fhir-logic-service│  │ │
-│  │  │  ┌──────────────────┐   │  │  ┌────────────────────────┐  │  │ │
-│  │  │  │ Mirth Connect    │   │  │  │  Node.js Express      │  │  │ │
-│  │  │  │ (Java)           │   │  │  │  FHIR Transformer     │  │  │ │
-│  │  │  │                  │   │  │  │                        │  │  │ │
-│  │  │  │ ┌──────────────┐ │   │  │  │  Routes:              │  │  │ │
-│  │  │  │ │Apache Derby  │ │   │  │  │  POST /fhir/Patient   │  │  │ │
-│  │  │  │ │(Embedded DB) │ │   │  │  │  GET  /health         │  │  │ │
-│  │  │  │ └──────────────┘ │   │  │  │                        │  │  │ │
-│  │  │  │                  │   │  │  └────────────────────────┘  │  │ │
-│  │  │  │ Ports:           │◄──┼──┼──HTTP on port 3000           │  │ │
-│  │  │  │ • 8080 Web UI    │   │  │                              │  │ │
-│  │  │  │ • 8443 Admin     │   │  │  Health: /health             │  │ │
-│  │  │  │ • 9001 HL7       │   │  │  Logs: console.log()         │  │ │
-│  │  │  └──────────────────┘   │  │                              │  │ │
-│  │  └─────────────────────────┘  └──────────────────────────────┘  │ │
-│  │                                                                   │ │
-│  └───────────────────────────────────────────────────────────────────┘ │
-│                                                                         │
-│  Port Mapping:                                                          │
-│  • 18082 → 8080 (Mirth Web Dashboard)                                  │
-│  • 18444 → 8443 (Mirth Administrator)                                  │
-│  • 19002 → 9001 (HL7 LLP Listener)                                     │
-│  • 3000 → 3000 (FHIR HTTP API)                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+**The channel copies; the app maps.** The channel only picks the fields and
+copies their values. Decoding and code mapping happen in
+`fhir-app/src/patient-mapper.js`. Reasons: all rules are in one place, they
+have unit tests (`node --test`), and the channel script stays short. Channel
+JavaScript runs in the engine's Rhino engine with E4X, which is hard to test
+outside the engine.
 
+**Escape sequences are decoded with the message's own delimiters.** The engine
+keeps `\F\`, `\S\`, `\T\`, `\R\` and `\E\` as they are in its XML form. The
+channel sends MSH-1 and MSH-2 in the `delimiters` field, so the app decodes
+correctly even when a sender uses other delimiter characters.
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      MESSAGE TRANSFORMATION                             │
-└─────────────────────────────────────────────────────────────────────────┘
+**Repeating fields are read one repetition at a time.** In the engine, a
+repeating field is a list. Reading `msg['PID']['PID.3']['PID.3.1']` on a list
+gives the XML of all repetitions, not one value. The transformer loops over the
+repetitions instead.
 
-INPUT (HL7 v2.5 ADT^A01):
-─────────────────────────
-MSH|^~\&|HOSPITAL_SYSTEM|INFOGLEAM_REF|...
-PID|1||TEST000001^^^INFOGLEAM^MR||PATIENT^TEST^A||19700101|U|||...
-PV1|1|I|4W^401^01^INFOGLEAM|||9999^PROVIDER^TEST^^^DR|||...
+**The MRN is the PID-3 repetition with type code MR.** The app does not guess:
+without an MR repetition, the Patient has no identifier, and the app logs a
+warning with the message ID.
 
-         │
-         │ Mirth Transformer (JavaScript)
-         │ • Parse HL7 segments
-         │ • Extract PID fields
-         │ • Format dates
-         │ • Map gender codes
-         v
+**`Identifier.system` must be a URI.** PID-3.4.1 is usually a short name such as
+`INFOGLEAM`, which is not a URI. The app uses PID-3.4.2 only when PID-3.4.3 says
+it is a URI, an ISO OID or a UUID. Otherwise it uses a configurable system
+(`MRN_SYSTEM`, default `https://example.org/fhir/mrn`) and keeps the short name
+in `assigner.display`.
 
-INTERMEDIATE (JSON):
-────────────────────
-{
-   "patientId": "TEST000001",
-   "firstName": "TEST",
-   "lastName": "PATIENT",
-   "gender": "U",
-   "birthDate": "1970-01-01",
-  ...
-}
+**Partial birth dates keep their precision.** FHIR `date` allows `YYYY`,
+`YYYY-MM` and `YYYY-MM-DD`, so an HL7 date with only a year or a year and month
+is kept, not dropped. Each date is checked against the calendar, including leap
+years.
 
-         │
-         │ FHIR Service (Node.js)
-         │ • Validate data
-         │ • Map to FHIR R4 schema
-         │ • Add metadata
-         │ • Generate identifiers
-         v
+**Code maps follow the HL7 V2-to-FHIR guide.** Gender, name type, address type,
+telecom use and equipment type use the concept maps of the
+[HL7 V2-to-FHIR implementation guide](https://hl7.org/fhir/uv/v2mappings/).
+For example, gender `N` (not applicable) maps to `other`, as in that guide.
 
-OUTPUT (FHIR R4 Patient):
-─────────────────────────
-{
-  "resourceType": "Patient",
-  "id": "patient-1736674245123",
-  "meta": {
-    "versionId": "1",
-    "lastUpdated": "2026-01-12T10:30:45.123Z",
-    "source": "InfoGleam-Mirth-Integration"
-  },
-  "identifier": [{
-      "system": "https://example.org/fhir/patients",
-         "value": "TEST000001"
-  }],
-  "name": [{
-    "use": "official",
-      "family": "PATIENT",
-      "given": ["TEST"]
-  }],
-  "gender": "male",
-   "birthDate": "1970-01-01"
-}
+**The app is a converter, not a FHIR server.** It stores nothing, so it answers
+200 (not 201 Created) and the Patient has no `id` and no `meta`. A FHIR server
+would set them when it stores the resource. The path `/convert/patient` makes
+this clear; `POST /fhir/Patient` would look like a FHIR create.
 
+**The ACK shows the end result.** The source answers "after destinations
+completed", the filter is on the destination, and the destination queue is off.
+So AA means "converted", AR means "filtered" and AE means "error". With the
+filter on the source, the engine answers AE for a filtered message, because no
+destination ran. A production interface would usually turn the queue on instead,
+so that messages are kept and retried; the ACK then means "received and stored".
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      MIRTH CHANNEL DESIGN                               │
-└─────────────────────────────────────────────────────────────────────────┘
+**The channel file is a 4.5.2 export.** The Administrator converts channels from
+older versions but refuses channels from newer ones. The 4.5.2 file was tested on
+OIE 4.5.2, OIE 4.7.0 and Mirth Connect 4.5.2.
 
-┌──────────────────────────────────────────────────────────────────────┐
-│  Channel: ADT_to_FHIR_Patient                                        │
-├──────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  ┌────────────┐      ┌──────────────┐      ┌──────────────────┐    │
-│  │  Source    │      │ Transformer  │      │  Destination     │    │
-│  │  Connector │─────>│   Step(s)    │─────>│   Connector      │    │
-│  └────────────┘      └──────────────┘      └──────────────────┘    │
-│                                                                      │
-│  Type: LLP          Type: JavaScript        Type: HTTP Sender       │
-│  Listener           Step                    (POST)                  │
-│                                                                      │
-│  Config:            Logic:                  Config:                 │
-│  • Host: 0.0.0.0    • Parse HL7             • URL:                  │
-│  • Port: 9001       • Extract fields          http://fhir-logic-   │
-│  • Protocol: MLLP   • Format data             service:3000/        │
-│  • Encoding: UTF-8  • Create JSON             fhir/Patient         │
-│                     • Error handling        • Method: POST          │
-│                                             • Content-Type:         │
-│                                               application/json      │
-│                                                                      │
-│  Filter (Optional):                                                 │
-│  ┌────────────────────────────────────────────────────────────┐    │
-│  │ // Only process ADT^A01 messages                           │    │
-│  │ var msgType = msg['MSH']['MSH.9']['MSH.9.1'].toString();   │    │
-│  │ var trigger = msg['MSH']['MSH.9']['MSH.9.2'].toString();   │    │
-│  │ return (msgType == 'ADT' && trigger == 'A01');             │    │
-│  └────────────────────────────────────────────────────────────┘    │
-│                                                                      │
-└──────────────────────────────────────────────────────────────────────┘
+**No patient data in logs.** The app logs only MSH-10, cleaned so it cannot
+break a log line. Error answers do not contain internal details. The channel
+logs nothing. Message content in the engine database is encrypted, but the
+"Development" storage mode keeps all of it, which is right for a demo only.
 
+**Local-only defaults.** All ports are bound to 127.0.0.1, the images are pinned
+(`openintegrationengine/engine:4.5.2-ubuntu-jre`, `node:22-alpine`), the app
+runs as the unprivileged `node` user, and `npm ci --omit=dev` installs exactly
+the versions in `package-lock.json`. When the app runs outside Docker, it
+listens on 127.0.0.1 unless `HOST` is set.
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      DEPLOYMENT ARCHITECTURE                            │
-└─────────────────────────────────────────────────────────────────────────┘
+## What a production version would add
 
-Development (Current):              Production (Future):
-──────────────────────              ─────────────────────
-
-┌─────────────────┐                ┌──────────────────────────────┐
-│ Docker Desktop  │                │ Kubernetes Cluster           │
-│ (Local Machine) │                │                              │
-│                 │                │  ┌────────────────────────┐  │
-│  • Mirth (1)    │                │  │ Mirth Pods (3 replicas)│  │
-│  • FHIR (1)     │                │  │ + Load Balancer        │  │
-│  • Derby DB     │                │  └────────────────────────┘  │
-│                 │                │                              │
-│  Single Node    │                │  ┌────────────────────────┐  │
-└─────────────────┘                │  │ FHIR Pods (5 replicas) │  │
-                                   │  │ + Auto-scaling         │  │
-                                   │  └────────────────────────┘  │
-                                   │                              │
-                                   │  ┌────────────────────────┐  │
-                                   │  │ PostgreSQL Cluster     │  │
-                                   │  │ (HA with replication)  │  │
-                                   │  └────────────────────────┘  │
-                                   │                              │
-                                   │  + Monitoring (Prometheus)   │
-                                   │  + Logging (ELK Stack)       │
-                                   │  + Security (mTLS, OAuth2)   │
-                                   └──────────────────────────────┘
-
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      STANDARDS COMPLIANCE                               │
-└─────────────────────────────────────────────────────────────────────────┘
-
-✅ HL7 v2.5 Specification
-   • MLLP Protocol (Minimal Lower Layer Protocol)
-   • Standard segment structure (MSH, PID, PV1)
-   • Field delimiters (|), Component separators (^)
-
-✅ FHIR R4 Specification
-   • RESTful API design
-   • JSON resource format
-   • Required elements: resourceType, id, meta
-   • Conformance with Patient resource profile
-
-✅ Integration Standards
-   • HTTP/HTTPS transport
-   • JSON content type
-   • Error handling with proper status codes
-   • Health check endpoints
-
-✅ Security Best Practices (for production)
-   • Container isolation
-   • Network segmentation
-   • Audit logging
-   • Encryption in transit and at rest
-
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      KEY TECHNOLOGIES                                   │
-└─────────────────────────────────────────────────────────────────────────┘
-
-┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
-│  Mirth Connect   │  │    Node.js 18    │  │   Docker 24.x    │
-│                  │  │                  │  │                  │
-│  • Java-based    │  │  • Express 4.x   │  │  • Compose 2.x   │
-│  • Enterprise    │  │  • Async/await   │  │  • Multi-stage   │
-│  • Open source   │  │  • ES modules    │  │  • Health checks │
-│  • NextGen       │  │  • Lightweight   │  │  • Networks      │
-└──────────────────┘  └──────────────────┘  └──────────────────┘
-
-┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
-│   Apache Derby   │  │  HL7 v2.5        │  │   FHIR R4        │
-│                  │  │                  │  │                  │
-│  • Embedded DB   │  │  • Legacy format │  │  • Modern API    │
-│  • Zero config   │  │  • Pipe-delimited│  │  • JSON/REST     │
-│  • Java-based    │  │  • Widely used   │  │  • HL7 standard  │
-│  • For dev only  │  │  • Since 1987    │  │  • Since 2019    │
-└──────────────────┘  └──────────────────┘  └──────────────────┘
-
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      TESTING WORKFLOW                                   │
-└─────────────────────────────────────────────────────────────────────────┘
-
-1. START SERVICES
-   └─> npm start
-   └─> docker compose up -d
-           ├─> Pull images
-           ├─> Build containers
-           └─> Start services
-
-2. CONFIGURE MIRTH
-   └─> http://localhost:18082
-       └─> Create channel
-           ├─> Source: LLP Listener
-           ├─> Transformer: JavaScript
-           └─> Destination: HTTP Sender
-
-3. SEND TEST MESSAGE
-   └─> npm run test:send-hl7
-       └─> test-hl7-sender.js
-           ├─> Read samples/sample_adt.hl7
-           ├─> Connect to localhost:19002
-           ├─> Send via MLLP protocol
-           └─> Receive ACK
-
-4. VERIFY OUTPUT
-   └─> npm run logs:fhir
-       └─> docker logs -f fhir-logic-service
-           ├─> See incoming JSON from Mirth
-           ├─> See FHIR transformation
-           └─> Verify Patient resource created
-
-5. VALIDATE FHIR
-   └─> https://validator.fhir.org/
-       └─> Copy JSON output
-           └─> Paste and validate
-               └─> ✅ Conformance check
-
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      PROJECT METADATA                                   │
-└─────────────────────────────────────────────────────────────────────────┘
-
-Project Name:    InfoGleam Health HL7 → FHIR Reference
-Version:         1.0.0
-Created:         January 12, 2026
-Status:          Reference Implementation (Not Production)
-License:         MIT
-
-Purpose:         Reference HL7 to FHIR transformation patterns
-                using Mirth Connect integration engine
-
-Target Audience: Healthcare IT professionals, System integrators,
-                Hospital CIOs, Developer community
-
-Use Cases:       • Legacy system modernization
-                • EHR interoperability
-                • Cloud migration
-                • Standards compliance
-
-Repository:      [Add your GitHub URL here]
-Documentation:   README.md, QUICKSTART.md
-Support:         [Add your contact email here]
-
-Built with ❤️ for the healthcare IT community
+See "Security notes" in the README. In short: TLS and authentication on both
+connections, an external database, message pruning, the destination queue,
+a real FHIR server with profile validation, monitoring and alerts.

@@ -1,73 +1,44 @@
-# Sample HL7 Messages for Testing
+# Sample HL7 v2 messages
 
-This folder contains sample HL7 messages for testing the InfoGleam Health reference integration.
+All messages in this folder are synthetic test data: no real patients, no real
+providers, no real organisations. Do not add real HL7 messages to this repository.
 
-These samples are provided for community learning/testing of HL7 parsing and transformation patterns.
+| File | Message | What it tests | Expected ACK (MSA-1) |
+|---|---|---|---|
+| `sample_adt.hl7` | ADT^A01 (admission) | A simple patient: one identifier, one name, gender U, full birth date, one address, one phone | AA |
+| `sample_adt_a08_repeats.hl7` | ADT^A08 (patient update) | Repeating fields: two PID-3 identifiers (the MR one is used), two names (legal and maiden), two addresses (home and mailing), a phone built from its parts and an e-mail address; the escape sequence `\T\` in the street; a birth date with year and month only | AA |
+| `sample_lab_result.hl7` | ORU^R01 (lab result) | A message type the channel does not convert | AR (filtered) |
 
-## Privacy / PHI
+The real FHIR output for the two ADT samples is in
+`fhir-app/test/fixtures/` (`*.patient.json`), next to the JSON that the channel
+sent to the FHIR app (`*.channel.json`).
 
-All sample messages in this folder contain **synthetic, anonymized data** (not real patients, not real providers). Do **not** paste or commit real HL7 messages containing PHI into this repo.
+## Sending a sample
 
-## Files
+Start the stack and deploy the channel first (see the main [README](../README.md)). Then:
 
-### 1. sample_adt.hl7
-**Message Type:** ADT^A01 (Patient Admission)
-**Use Case:** Patient registration/admission workflow
-
-**Patient Details:**
-- Name: Test A Patient
-- MRN: TEST000001
-- DOB: January 1, 1970
-- Gender: Unknown (U)
-- Address: 100 Test Street, Testville, USA
-- Phone: (555)0100
-
-### 2. sample_lab_result.hl7
-**Message Type:** ORU^R01 (Observation Result/Lab Result)
-**Use Case:** Laboratory results transmission
-
-**Lab Panel:** Complete Blood Count (CBC)
-- WBC: 7.5 (Normal)
-- RBC: 4.8 (Normal)
-- Hemoglobin: 14.2 (Normal)
-- Hematocrit: 42.1 (Normal)
-- Platelet Count: 245 (Normal)
-
-## How to Use These Files
-
-### Method 1: Via Mirth Administrator (GUI)
-1. Open Mirth Administrator at `http://localhost:18444`
-2. Navigate to your channel
-3. Click "Send Message" button
-4. Copy the content from one of these files
-5. Paste into the message window
-6. Click "Send"
-
-### Method 2: Via HL7 TCP Client (Command Line)
 ```bash
-# Using the test script in the root folder
-npm run test:send-hl7
+npm run test:send-hl7       # samples/sample_adt.hl7
+npm run test:send-repeats   # samples/sample_adt_a08_repeats.hl7
+npm run test:send-oru       # samples/sample_lab_result.hl7, expects AR
 ```
 
-### Method 3: Using netcat (if installed)
+Or call the sender yourself:
+
 ```bash
-# Send ADT message
-cat samples/sample_adt.hl7 | nc localhost 19002
+node test-hl7-sender.js samples/sample_adt.hl7 --host localhost --port 6661
 ```
 
-## Expected Output
+The sender wraps the message in MLLP framing, waits for the complete ACK and
+exits with code 0 only when MSA-1 is `AA` or `CA` (or the codes given with
+`--expect`). It prints the ACK, never the message.
 
-When you send these messages through Mirth to the FHIR service, you should see:
-1. Mirth console logs showing message received
-2. FHIR service console logs showing transformation
-3. A valid FHIR R4 Patient resource returned
+You can also paste a sample into the Administrator ("Send Message" on the
+deployed channel). The Administrator is at `https://localhost:18444`.
 
-## Message Format Notes
+## Message format
 
-- Field delimiter: `|`
-- Component separator: `^`
-- Repetition separator: `~`
-- Escape character: `\`
-- Sub-component separator: `&`
-
-All messages follow HL7 v2.5 specification.
+- Segments end with a carriage return. The files use normal line endings; the
+  sender and the engine convert them.
+- Delimiters: field `|`, component `^`, repetition `~`, escape `\`, subcomponent `&`.
+- Version: HL7 v2.5 (MSH-12).

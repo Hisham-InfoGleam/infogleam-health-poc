@@ -1,156 +1,83 @@
-# Mirth Channel Configuration Guide
+# The ADT_to_FHIR_Patient channel
 
-This folder contains configuration files and documentation for setting up Mirth Connect channels.
+`adt_to_fhir_channel.xml` is a real channel export. The channel was created on
+Open Integration Engine (OIE) 4.5.2 and exported with the engine's REST API
+(`GET /api/channels/{id}`) on 2026-10-30. The same file was imported and tested
+on OIE 4.5.2, OIE 4.7.0 and Mirth Connect 4.5.2.
 
-## Quick Setup Instructions
+The file is in the 4.5.2 format on purpose. The Administrator refuses to import
+a channel from a newer engine version, but it converts a channel from an older
+version. So a 4.5.2 export works on more engines.
 
-### 1. Access Mirth Administrator
-1. Ensure Docker containers are running: `docker compose up -d`
-2. Wait 30-60 seconds for Mirth to fully start
-3. Open browser to `http://localhost:18082` (Web dashboard)
-4. Click "Launch Mirth Administrator"
-5. Login credentials:
-   - Server: `https://localhost:18444`
-   - Username: `admin`
-   - Password: `admin` (default for the local development image)
+To import it, see step 2 of the Quick start in the main [README](../README.md).
 
-⚠️ For anything beyond local development/training, change defaults and follow your organization's security policies.
+## What is in the channel
 
-### 2. Create HL7 to FHIR Channel
+| Part | Setting |
+|---|---|
+| Channel ID | `52b4625d-2d31-4653-9f68-c6d2d7930c92` |
+| Source | TCP Listener with MLLP framing on `0.0.0.0:6661`, data type HL7 v2.x, UTF-8 |
+| Source response | "Auto-generate (Destinations completed)": the ACK is built after the destination has run |
+| Destination "FHIR app", filter | JavaScript rule: MSH-9.1 is `ADT` and MSH-9.2 is one of `A01`, `A04`, `A05`, `A08`, `A28`, `A31` |
+| Destination "FHIR app", transformer | JavaScript step "Build JSON for the FHIR app": copies the PID fields into the channel map variable `fhirPayload` |
+| Destination "FHIR app", connector | HTTP Sender: `POST http://fhir-logic-service:3000/convert/patient`, body `${fhirPayload}`, content type `application/json`, header `Accept: application/fhir+json`, queue off |
+| Message storage | "Development" (all content is kept, for learning), encrypted in the engine database |
 
-#### Channel Settings
-- **Name:** ADT_to_FHIR_Patient
-- **Description:** Transforms HL7 ADT messages to FHIR R4 Patient resources
+## ACK codes
 
-#### Source Connector (HL7 Listener)
-- **Connector Type:** LLP Listener
-- **Port:** 9001 (mapped to 19002 on host)
-- **Data Type:** HL7 v2.x
-- **Response:** Auto-generate (after source)
+| MSA-1 | When | MSA-3 text |
+|---|---|---|
+| AA | The FHIR app answered with HTTP 200 | (empty) |
+| AR | The destination filter did not accept the message | `Message filtered: this channel accepts only ADT A01, A04, A05, A08, A28 and A31.` |
+| AE | The FHIR app answered with an error (for example HTTP 400 for a message without a name) or could not be reached | `An Error Occurred Processing Message.` |
 
-#### Source Transformer
-Add a JavaScript transformer step to extract HL7 fields:
+The filter and the transformer are on the destination, not on the source, on
+purpose. With "Destinations completed", a message that the source filter drops
+gets AE, because no destination ran. With the filter on the destination, a
+dropped message gets AR and only real errors get AE.
 
-```javascript
-// Extract patient demographics from HL7 PID segment
-var patientId = msg['PID']['PID.3']['PID.3.1'].toString();
-var lastName = msg['PID']['PID.5']['PID.5.1'].toString();
-var firstName = msg['PID']['PID.5']['PID.5.2'].toString();
-var middleName = msg['PID']['PID.5']['PID.5.3'].toString();
-var birthDate = msg['PID']['PID.7']['PID.7.1'].toString();
-var gender = msg['PID']['PID.8']['PID.8.1'].toString();
-var address = msg['PID']['PID.11']['PID.11.1'].toString();
-var city = msg['PID']['PID.11']['PID.11.3'].toString();
-var zipCode = msg['PID']['PID.11']['PID.11.5'].toString();
-var country = msg['PID']['PID.11']['PID.11.6'].toString();
-var phone = msg['PID']['PID.13']['PID.13.1'].toString();
+The queue is off so that the ACK shows the result of the conversion. In a real
+interface you would usually turn the queue on and answer after the source; the
+ACK then means "received and stored", and the engine retries when the FHIR app
+is down.
 
-// Create JSON payload for FHIR service
-var payload = {
-    patientId: patientId,
-    firstName: firstName,
-    lastName: lastName,
-    gender: gender,
-    birthDate: formatDate(birthDate), // Format: YYYYMMDD -> YYYY-MM-DD
-    address: address,
-    city: city,
-    zipCode: zipCode,
-    country: country,
-    phone: phone
-};
+## The JSON that the channel sends
 
-// Helper function to format date
-function formatDate(hl7Date) {
-    if (hl7Date && hl7Date.length >= 8) {
-        var year = hl7Date.substring(0, 4);
-        var month = hl7Date.substring(4, 6);
-        var day = hl7Date.substring(6, 8);
-        return year + '-' + month + '-' + day;
-    }
-    return null;
-}
+The transformer copies the values exactly as they are in the message. It does
+not decode escape sequences and does not map codes; the FHIR app does both, so
+all mapping rules are in one place with unit tests. Example: the JSON for
+`samples/sample_adt.hl7` is in
+[`fhir-app/test/fixtures/sample_adt_a01.channel.json`](../fhir-app/test/fixtures/sample_adt_a01.channel.json).
 
-// Set the transformed message
-channelMap.put('fhirPayload', JSON.stringify(payload));
-```
+| JSON field | HL7 v2 source |
+|---|---|
+| `messageControlId` | MSH-10 (the only value the FHIR app writes to its log) |
+| `messageType` | MSH-9.1 `^` MSH-9.2 |
+| `delimiters` | MSH-1 and MSH-2, for example `\|^~\&` |
+| `identifiers[]` | each PID-3: `value` 3.1, `authority` 3.4.1, `authorityId` 3.4.2, `authorityIdType` 3.4.3, `type` 3.5 |
+| `names[]` | each PID-5: `family` 5.1.1, `given` 5.2, `middle` 5.3, `suffix` 5.4, `prefix` 5.5, `type` 5.7 |
+| `birthDate` | PID-7.1 |
+| `gender` | PID-8.1 |
+| `addresses[]` | each PID-11: `street` 11.1.1, `other` 11.2, `city` 11.3, `state` 11.4, `postalCode` 11.5, `country` 11.6, `type` 11.7 |
+| `phones[]` | each PID-13: `number` 13.1, `use` 13.2, `equipment` 13.3, `email` 13.4, `countryCode` 13.5, `areaCode` 13.6, `localNumber` 13.7, `extension` 13.8 |
 
-#### Destination Connector (HTTP Sender)
-- **Connector Type:** HTTP Sender
-- **URL:** `http://fhir-logic-service:3000/fhir/Patient`
-  - ⚠️ **Important:** Use the container name `fhir-logic-service`, NOT `localhost`
-- **Method:** POST
-- **Content Type:** application/json
-- **Request Body:** `${fhirPayload}`
+A number like 3.4.2 means a subcomponent: in `PID-3.4` = `NAME&ID&ISO`, 3.4.1
+is `NAME`, 3.4.2 is `ID` and 3.4.3 is `ISO`. When a component has no
+subcomponents, its whole text counts as subcomponent 1.
 
-#### Filter (Optional)
-Add a filter to only process ADT^A01 messages:
-```javascript
-// Only process admission messages
-var messageType = msg['MSH']['MSH.9']['MSH.9.1'].toString();
-var triggerEvent = msg['MSH']['MSH.9']['MSH.9.2'].toString();
-return (messageType == 'ADT' && triggerEvent == 'A01');
-```
+## Changing the channel
 
-### 3. Deploy and Test
-
-1. **Deploy Channel:**
-   - Click the green play button in Mirth Administrator
-   - Status should show green checkmark
-
-2. **Send Test Message:**
-   - Right-click on channel → Send Message
-   - Copy content from `samples/sample_adt.hl7`
-   - Click "Send"
-
-3. **Verify Results:**
-   - Check Mirth Dashboard for message count
-   - View FHIR service logs:
-     ```bash
-     docker logs -f fhir-logic-service
-     ```
-   - You should see FHIR JSON output
-
-### 4. Export Channel (For Sharing)
-
-1. Right-click on channel → Export Channel
-2. Save as `adt_to_fhir_channel.xml`
-3. Commit to version control
+- **Port:** change the source listener port, and the port mapping in `docker-compose.yml`.
+- **FHIR app address:** change the URL of the HTTP Sender. `fhir-logic-service`
+  works only when the engine and the app are in the same Docker network, as in
+  `docker-compose.yml`.
+- After a change, export the channel again (Administrator: Export Channel, or
+  `GET /api/channels/{id}`) and replace the file in this folder.
 
 ## Troubleshooting
 
-### Issue: Connection Refused to FHIR Service
-**Solution:** Ensure both containers are on the same Docker network. Use container name, not `localhost`.
-
-### Issue: Cannot Parse HL7 Message
-**Solution:** Verify message has proper line breaks. HL7 segments must be separated by `\r` (carriage return).
-
-### Issue: Mirth Won't Start
-**Solution:** 
-- Check if port 18082 or 18444 is already in use
-- Review Docker logs: `docker logs mirth-connect`
-- Wait longer (first start can take 60+ seconds)
-
-## Advanced Configuration
-
-### Database Configuration (Production)
-For production, replace Derby with PostgreSQL or MySQL:
-
-```yaml
-# In docker-compose.yml, add database environment variables to Mirth:
-environment:
-  - DATABASE=postgres
-  - DATABASE_URL=jdbc:postgresql://postgres:5432/mirthdb
-  - DATABASE_USERNAME=mirth
-   - DATABASE_PASSWORD=your_secure_password  # never commit real passwords
-```
-
-### High Availability Setup
-- Deploy multiple Mirth instances behind a load balancer
-- Use external database (PostgreSQL/MySQL)
-- Implement message queuing (RabbitMQ/Kafka)
-
-## Resources
-
-- [Mirth Connect User Guide](https://www.nextgen.com/products-and-services/integration-engine)
-- [HL7 v2.5 Specification](http://www.hl7.org)
-- [FHIR R4 Documentation](https://www.hl7.org/fhir/)
+| What you see | What to check |
+|---|---|
+| AE for every message | Is the FHIR app running (`docker compose ps`)? The error of the destination message shows the reason, for example `UnknownHostException: fhir-logic-service` when the app is not on the same network or not started. |
+| No ACK, or connection refused | Is the channel deployed and started? Is port 6661 mapped? |
+| Import refused: "originated from a newer version" | The engine is older than 4.5.2. |
